@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  rstudio:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lighthergm
+    ports:
+      - 8787:8787
+    environment:
+      - PASSWORD=${PASSWORD}
+      #- USERID=${USERID}
+      #- GROUPID=${GROUPID}
+    #volumes:
+    #  - ${WORKSPACE_PATH}:/home/rstudio/workspace
+    tty: true
+    stdin_open: true

@@ -1,0 +1,54 @@
+Package: lighthergm
+Title: Fit, Simulate, and Diagnose Hierarchical Exponential-Family Models for Networks in A Scalable Way
+Version: 1.0.0
+Authors@R: c(
+    person(given = "Shota", family = "Komatsu", role = c("aut", "cre"), email = "first.last@example.com"),
+    person(given = "Juan Nelson", family = "Martínez Dahbura", role = c("aut"), email = "first.last@example.com"),
+    person(given = "Takanori", family = "Nishida", role = c("aut"), email = "first.last@example.com"),
+    person(given = "Angelo", family = "Mele", role = c("aut"), email = "first.last@example.com"))
+Description: `lighthergm` is an R library for estimating hierarchical exponential random graph models (HERGMs) efficiently on large networks. It also contains tools for simulating networks with local dependence and for assessing the goodness-of-fit of the estimates.
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
+Depends:
+    R (>= 3.5.0)
+LinkingTo: 
+    Rcpp,
+    RcppArmadillo (>= 0.10.5)
+Imports: 
+    Rcpp,
+    ergm (>= 3.11.0),
+    network (>= 1.16.0),
+    Matrix,
+    stringr,
+    intergraph,
+    igraph,
+    parallel,
+    magrittr,
+    purrr,
+    dplyr,
+    tibble,
+    glue,
+    readr,
+    foreach,
+    rlang,
+    reticulate,
+    tidyr,
+    statnet.common,
+    doParallel
+Suggests: 
+    rmarkdown,
+    knitr,
+    testthat,
+    ggplot2,
+    GGally,
+    sna
+Config/reticulate:
+  list(
+    packages = list(
+      list(package = "infomap", version = "1.3.0", pip = TRUE)
+    )
+  )
+VignetteBuilder: knitr
