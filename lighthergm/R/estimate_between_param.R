@@ -53,7 +53,7 @@ estimate_between_param <- function(formula, network, block) {
       is_dep <- is.null(dep) || dep
     }) %>% unlist()
   between_rhs <- varnames[!dep_terms]
-  between_formula <- as.formula(paste("g_logit ~ ", paste(between_rhs, collapse = " + ")))
+  between_formula <- as.formula(glue::glue("g_logit ~ {paste(between_rhs, collapse = '+')}"))
 
   # Estimate logit
   between_logit <- ergm(
