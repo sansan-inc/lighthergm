@@ -117,3 +117,14 @@ test_that("estimating between-block parameters by logit works", {
     method_second_step = "MPLE"
   ), NA)
 })
+
+test_that("estimating between-block parameters using a formula without externality terms works", {
+  # Check if within-block parameter estiamtion works
+  expect_error(
+    estimate_between_param(
+      formula = g ~ edges + nodematch("x1"),
+      network = g,
+      block = z_memb
+    ),
+    NA)
+})
