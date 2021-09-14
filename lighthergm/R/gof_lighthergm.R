@@ -63,12 +63,12 @@ separate_formulas <- function(target_formula) {
   net <- get(str_net, envir = environment(target_formula))
   terms <- ergm::ergm_model(target_formula)$terms
   varnames <- statnet.common::list_rhs.formula(target_formula) %>% as.character()
-  dep_terms <- which(terms %>% purrr::map(function(t) {
-    dep <- t$dependence
-    is_dep <- is.null(dep) || dep
-  }) %>% unlist())
-
-  between_rhs <- varnames[-dep_terms]
+  dep_terms <-
+    terms %>% purrr::map(function(t) {
+      dep <- t$dependence
+      is_dep <- is.null(dep) || dep
+    }) %>% unlist()
+  between_rhs <- varnames[!dep_terms]
   within_rhs <- varnames
 
   between_formula <- paste(str_net, "~", paste(between_rhs, collapse = " + "))

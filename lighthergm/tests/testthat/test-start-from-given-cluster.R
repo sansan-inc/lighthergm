@@ -70,7 +70,7 @@ test_that("starting EM iterations and parameter estimation from a given vector o
   # Check if starting from block memberships initialized Python's infomap works.
   expect_error(result2 <-
     lighthergm::hergm(g_sim ~ edges + nodematch("x") + nodematch("y") + triangles,
-      initialized_cluster_data = "initialized_cluster_data_by_infomap.clu",
+      initialized_cluster_data = system.file("extdata", "initialized_cluster_data_by_infomap.clu", package = "lighthergm"),
       n_em_step_max = 1,
       estimate_parameters = FALSE,
       verbose = 1
