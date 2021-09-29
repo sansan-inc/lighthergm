@@ -37,7 +37,9 @@ Imports:
     reticulate,
     tidyr,
     statnet.common,
-    doParallel
+    doParallel,
+    memoise,
+    cachem
 Suggests: 
     rmarkdown,
     knitr,

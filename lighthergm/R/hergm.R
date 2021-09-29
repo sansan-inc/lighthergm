@@ -40,6 +40,7 @@
 #' @param check_alpha_update If `TRUE`, this function keeps track of alpha matrices at each EM iteration.
 #' If the network is large, we strongly recommend to set to be `FALSE`.
 #' @param check_block_membership If TRUE, this function keeps track of estimated block memberships at each EM iteration.
+#' @param cache a `cachem` cache object used to store intermediate calculations such as eigenvector decomposition results.
 #' @param ... Additional arguments, to be passed to lower-level functions
 #'
 #' @examples
@@ -80,6 +81,7 @@ hergm <- function(object,
                   compute_pi = FALSE,
                   check_alpha_update = FALSE,
                   check_block_membership = FALSE,
+                  cache = NULL,
                   ...) {
   ###################################################################################
   ###### Preparations for estimation ################################################
@@ -232,7 +234,8 @@ hergm <- function(object,
       compute_pi = compute_pi,
       check_alpha_update = check_alpha_update,
       check_block_membership = check_block_membership,
-      EM_restart_object = EM_restart_object
+      EM_restart_object = EM_restart_object,
+      cache = cache
     )
 
     block_membership <- answer$z_memb_final
