@@ -776,7 +776,6 @@ get_between_stats <- function(edgelists, between_formula) {
 #' @param n_sim number of networks generated
 #' @param verbose If this is TRUE/1, the program will print out additional information about the progress of simulation.
 #' @param ...
-#'
 #' @export
 get_hergm_within_stats <- function(formula_for_simulation,
                                   data_for_simulation,
@@ -812,9 +811,8 @@ get_hergm_within_stats <- function(formula_for_simulation,
 
   # Send a message about which value of a coefficient is attached to which term.
   # This is to make sure that `coef_within_block` are correctly specified as the user intends.
-  names(coef_within_block) <- as.character(formula_for_simulation_within)[3] %>%
-    stringr::str_split(pattern = " \\+ ") %>%
-    unlist %>%
+  names(coef_within_block) <- statnet.common::list_rhs.formula(formula_for_simulation_within) %>%
+    as.character %>%
     stringr::str_replace_all("\"", "'")
 
   # Simulate connections
