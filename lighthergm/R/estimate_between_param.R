@@ -47,12 +47,13 @@ estimate_between_param <- function(formula, network, block) {
   varnames <-
     statnet.common::list_rhs.formula(formula) %>%
     as.character()
-  dep_terms <- which(terms %>% purrr::map(function(t) {
-    dep <- t$dependence
-    is_dep <- is.null(dep) || dep
-  }) %>% unlist())
-  between_rhs <- varnames[-dep_terms]
-  between_formula <- as.formula(paste("g_logit ~ ", paste(between_rhs, collapse = " + ")))
+  dep_terms <-
+    terms %>% purrr::map(function(t) {
+      dep <- t$dependence
+      is_dep <- is.null(dep) || dep
+    }) %>% unlist()
+  between_rhs <- varnames[!dep_terms]
+  between_formula <- as.formula(glue::glue("g_logit ~ {paste(between_rhs, collapse = '+')}"))
 
   # Estimate logit
   between_logit <- ergm(
