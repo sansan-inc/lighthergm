@@ -4,12 +4,14 @@
 \alias{spec_clust_sparse}
 \title{function for spectral clustering}
 \usage{
-spec_clust_sparse(network, n_clusters)
+spec_clust_sparse(network, n_clusters, eigenvectors_fn)
 }
 \arguments{
 \item{network}{a sparse adjacency matrix}
 
 \item{n_clusters}{number of specified clusters}
+
+\item{eigenvectors_fn}{a function that performs eigenvector decomposition}
 }
 \description{
 function for spectral clustering

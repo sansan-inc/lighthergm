@@ -164,6 +164,8 @@ summary(hergm_res$est_within)
 
 Currently, the only supported way to include covariates in the model is via `nodematch()`.
 
+You can also employ caching to avoid repeating heavy operations that yield the same results for your network. To use it, pass the `cache` parameter to `lighthergm::hergm`, setting its value to a [cachem](https://github.com/r-lib/cachem "cachem repository") object. A disk cache lets you speed up estimations on the same network data even across R Sessions.
+
 # Goodness-of-fit
 
 You can evaluate the goodness-of-fit of the model with the `lighthergm::gof_lighthergm()` function:

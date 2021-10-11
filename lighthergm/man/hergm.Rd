@@ -25,6 +25,7 @@ hergm(
   compute_pi = FALSE,
   check_alpha_update = FALSE,
   check_block_membership = FALSE,
+  cache = NULL,
   ...
 )
 }
@@ -85,6 +86,8 @@ If the network is large, we strongly recommend to set to be \code{FALSE}.}
 If the network is large, we strongly recommend to set to be \code{FALSE}.}
 
 \item{check_block_membership}{If TRUE, this function keeps track of estimated block memberships at each EM iteration.}
+
+\item{cache}{a \code{cachem} cache object used to store intermediate calculations such as eigenvector decomposition results.}
 
 \item{...}{Additional arguments, to be passed to lower-level functions}
 }

@@ -1,6 +1,6 @@
 Package: lighthergm
 Title: Fit, Simulate, and Diagnose Hierarchical Exponential-Family Models for Networks in A Scalable Way
-Version: 1.0.0
+Version: 1.0.1
 Authors@R: c(
     person(given = "Shota", family = "Komatsu", role = c("aut", "cre"), email = "first.last@example.com"),
     person(given = "Juan Nelson", family = "Martínez Dahbura", role = c("aut"), email = "first.last@example.com"),
@@ -37,7 +37,9 @@ Imports:
     reticulate,
     tidyr,
     statnet.common,
-    doParallel
+    doParallel,
+    memoise,
+    cachem
 Suggests: 
     rmarkdown,
     knitr,
