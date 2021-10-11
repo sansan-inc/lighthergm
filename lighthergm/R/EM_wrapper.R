@@ -18,9 +18,17 @@ EM_wrapper <-
            check_block_membership = FALSE,
            EM_restart_object = NULL,
            minAlpha = 1e-6,
+           cache,
            ...) {
     n_nodes <- as.integer(network$gal$n)
     is_undirected <- !network$gal$directed
+
+    # Cache eigenvectors computation in disk to free memory for other computations
+    if(is.null(cache)){
+      eigenvectors_sparse_fn <- eigenvectors_sparse
+    } else {
+      eigenvectors_sparse_fn <- memoise::memoise(eigenvectors_sparse, cache = cache)
+    }
 
     # If restart_object is NULL, initialize memberships.
     if (is.null(EM_restart_object)) {
@@ -41,7 +49,7 @@ EM_wrapper <-
       # If you already have an initialized clustering result, start the EM iterations from the given clustering result.
       if (!is.null(initialized_cluster_data)) {
         z_memb_init <- factor(initialized_cluster_data, levels = 1:n_clusters)
-        z_memb <- check_clusters_sparse(z_memb_init, g, n_clusters, min_size, verbose = verbose)
+        z_memb <- check_clusters_sparse(z_memb_init, g, n_clusters, eigenvectors_sparse_fn, min_size, verbose = verbose)
       }
 
       # Start cluster initialization
@@ -67,7 +75,7 @@ EM_wrapper <-
             b <- readr::read_delim(temp_clu[1], delim = " ", skip = 9, col_names = c("node_id", "block", "flow"), col_types = "iid")
             b <- as.numeric(dplyr::arrange(b, by_group = node_id)$block)
             z_memb_init <- factor(b, levels = 1:n_clusters)
-            z_memb <- check_clusters_sparse(z_memb_init, g, n_clusters, min_size, verbose = verbose)
+            z_memb <- check_clusters_sparse(z_memb_init, g, n_clusters, eigenvectors_sparse_fn, min_size, verbose = verbose)
             # Remove tempfiles just in case
             invisible(file.remove(temp))
             invisible(file.remove(temp_clu))
@@ -77,7 +85,7 @@ EM_wrapper <-
             set.seed(seed_infomap)
             b <- igraph::cluster_infomap(intergraph::asIgraph(network))
             z_memb_init <- factor(b$membership, levels = 1:n_clusters)
-            z_memb <- check_clusters_sparse(z_memb_init, g, n_clusters, min_size, verbose = verbose)
+            z_memb <- check_clusters_sparse(z_memb_init, g, n_clusters, eigenvectors_sparse_fn, min_size, verbose = verbose)
           }
         }
       else if (initialization_method == 2) {
@@ -86,7 +94,7 @@ EM_wrapper <-
       }
       else # Spectral clustering
       {
-        z_memb <- spec_clust_sparse(g, n_clusters)
+        z_memb <- spec_clust_sparse(g, n_clusters, eigenvectors_sparse_fn)
         z_memb_init <- z_memb
       }
 
@@ -349,7 +357,7 @@ EM_wrapper <-
 
     # Check bad clusters
     z_memb_final <-
-      factor(check_clusters_sparse(z_memb, g, n_clusters, min_size, verbose = verbose),
+      factor(check_clusters_sparse(z_memb, g, n_clusters, eigenvectors_sparse_fn, min_size, verbose = verbose),
         levels = 1:n_clusters
       )
 
@@ -442,11 +450,12 @@ permute_tau <- function(tau, labels) {
 #' function for spectral clustering
 #' @param network a sparse adjacency matrix
 #' @param n_clusters number of specified clusters
-spec_clust_sparse <- function(network, n_clusters) {
+#' @param eigenvectors_fn a function that performs eigenvector decomposition
+spec_clust_sparse <- function(network, n_clusters, eigenvectors_fn) {
   n <- nrow(network)
   n_vec <- ceiling(sqrt(n))
   message("Calculating eigenvectors...")
-  b <- eigenvectors_sparse(network, n_vec)
+  b <- eigenvectors_fn(network, n_vec)
   message("K-means clustering...")
   c <- kmeans(
     b,
@@ -462,7 +471,7 @@ spec_clust_sparse <- function(network, n_clusters) {
 
 
 check_clusters_sparse <-
-  function(z_memb, network, n_clusters, min_size = 2, verbose = verbose) {
+  function(z_memb, network, n_clusters, eigenvectors_fn, min_size = 2, verbose = verbose) {
     n <- nrow(network)
     n_vec <- ceiling(sqrt(n))
 
@@ -470,7 +479,7 @@ check_clusters_sparse <-
       message("Eigenvalue decomposition")
     }
 
-    b <- eigenvectors_sparse(network, n_vec)
+    b <- eigenvectors_fn(network, n_vec)
     z_memb <- factor(z_memb, levels = 1:n_clusters)
 
     if (verbose > 0) {
