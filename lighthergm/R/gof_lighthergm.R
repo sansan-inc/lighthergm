@@ -250,3 +250,115 @@ gof_lighthergm <- function(net,
 
   return(results)
 }
+
+#' Goodness of fit statistics for HERGM
+#' @param net the target network
+#' @param data_for_simulation a dataframe with node-level covariates
+#' @param colname_vertex_id the name of the column that contains the node id
+#' @param colname_block_membership the name o the column that contains the block affiliation of each node
+#' @param lighthergm_results a lighthergm results object
+#' @param ergm_control MCMC parameters as an instance of ergm.control
+#' @param seed the seed to be passed to simulate_hergm
+#' @param n_sim the number of simulations to employ for calculating goodness of fit
+#' @param compute_geodesic_distance if `TRUE`, the distribution of geodesic distances is also computed (considerably increases computation time on large networks. `FALSE` by default.)
+#' @param ... Additional arguments, to be passed to lower-level functions
+#'
+#' @export
+gof_lighthergm_within <- function(net,
+                           data_for_simulation,
+                           colname_vertex_id,
+                           colname_block_membership,
+                           lighthergm_results,
+                           ergm_control = ergm::control.simulate.formula(),
+                           seed = NULL,
+                           n_sim = 1,
+                           compute_geodesic_distance = FALSE,
+                           ...) {
+
+  gof_formula <- swap_formula_network(net, lighthergm_results$est_within$formula, environment())
+
+  coef_within_block <- coef(lighthergm_results$est_within)
+
+  # Obtain the within stats
+  sorted_dataframe <- sort_block_membership(data_for_simulation, colname_vertex_id, colname_block_membership)
+  seed_edgelist_within <- arrange_edgelist(network::as.edgelist(net), sorted_dataframe)$edgelist_within
+  within_network <- generate_seed_network(gof_formula, sorted_dataframe, edgelist = seed_edgelist_within, directed = FALSE)
+
+  original_stats <- get_gof_stats(gof_formula, net = within_network, compute_geodesic_distance = compute_geodesic_distance)
+
+  burnin <- ergm_control$MCMC.burnin
+  interval <- ergm_control$MCMC.interval
+
+  # Simulate the first network by initializing it from zero. The burnin here is the one set by the user.
+  base_network <- lighthergm::simulate_hergm_within(
+    formula_for_simulation = gof_formula,
+    data_for_simulation = data_for_simulation,
+    colname_vertex_id = colname_vertex_id,
+    colname_block_membership = colname_block_membership,
+    coef_within_block = coef_within_block,
+    output = 'network',
+    ergm_control = ergm_control,
+    seed = seed,
+    n_sim = 1
+  )
+
+  # Get the statistics for the first network
+  sim_stats <- get_gof_stats(gof_formula, base_network, 1, compute_geodesic_distance = compute_geodesic_distance)
+  results <- list(
+    original = list(
+      network_stats = original_stats$network_stats,
+      degree_dist = original_stats$degree_dist,
+      esp_dist = original_stats$esp_dist,
+      geodesic_dist = original_stats$geodesic_dist
+    ),
+    simulated = list(
+      network_stats = sim_stats$network_stats,
+      degree_dist = sim_stats$degree_dist,
+      esp_dist = sim_stats$esp_dist,
+      geodesic_dist = sim_stats$geodesic_dist
+    )
+  )
+
+  effective_nsim <- n_sim - 1
+
+  if (effective_nsim > 0) {
+    # Now replace the burnin with the interval and simulate networks one by one.
+    ergm_control_sim <- ergm_control
+    ergm_control_sim$MCMC.burnin <- interval
+
+    for (i in 1:effective_nsim) {
+      if ((i + 1) %% 50 == 0) {
+        message(paste("Simulation:", i + 1))
+      }
+
+      base_network <- lighthergm::simulate_hergm_within(
+        formula_for_simulation = gof_formula,
+        data_for_simulation = data_for_simulation,
+        colname_vertex_id = colname_vertex_id,
+        colname_block_membership = colname_block_membership,
+        seed_edgelist = network::as.edgelist(base_network),
+        coef_within_block = coef_within_block,
+        output = 'network',
+        ergm_control = ergm_control,
+        seed = seed,
+        n_sim = 1
+      )
+
+      sim_stats <- get_gof_stats(gof_formula, base_network, i + 1, compute_geodesic_distance = compute_geodesic_distance)
+      results$simulated$network_stats <- rbind(results$simulated$network_stats, sim_stats$network_stats)
+      results$simulated$degree_dist <- rbind(results$simulated$degree_dist, sim_stats$degree_dist)
+      results$simulated$esp_dist <- rbind(results$simulated$esp_dist, sim_stats$esp_dist)
+      if (
+        !(is.null(results$simulated$geodesic_dist)) &
+        !(is.null(sim_stats$geodesic_dist))
+      ) {
+        results$simulated$geodesic_dist <- rbind(results$simulated$geodesic_dist, sim_stats$geodesic_dist)
+      }
+    }
+
+    message("Simulation Finished")
+  }
+
+  return(results)
+}
+
