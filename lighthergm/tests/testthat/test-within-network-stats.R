@@ -23,7 +23,7 @@ test_that("generating multiple networks works", {
   )
 
   # Obtain the stats
-  within_sim_stats <- lighthergm::get_hergm_within_stats(
+  within_sim_stats <- lighthergm::simulate_hergm_within(
     formula_for_simulation = formula,
     data_for_simulation = df,
     colname_vertex_id = 'id',

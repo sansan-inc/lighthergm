@@ -11,6 +11,7 @@ gof_lighthergm(
   colname_vertex_id,
   colname_block_membership,
   lighthergm_results,
+  type = "full",
   ergm_control = ergm::control.simulate.formula(),
   seed = NULL,
   n_sim = 1,
@@ -31,6 +32,8 @@ gof_lighthergm(
 \item{colname_block_membership}{the name o the column that contains the block affiliation of each node}
 
 \item{lighthergm_results}{a lighthergm results object}
+
+\item{type}{the type of evaluation to perform. Can take the values \code{full} or \code{within}. \code{full} performs the evaluation on all edges, and \code{within} only considers within-block edges.}
 
 \item{ergm_control}{MCMC parameters as an instance of ergm.control}
 
