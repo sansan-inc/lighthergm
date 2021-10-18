@@ -240,7 +240,7 @@ test_that("Return GOF statistics including only within-block connections", {
     dplyr::filter(block.src == block.dst) %>%
     nrow
 
-  within_conns_from_gof <- (test_gof_res$original$network_stats %>% filter(stat == 'edges'))[, 2]
+  within_conns_from_gof <- (test_gof_res$original$network_stats %>% dplyr::filter(stat == 'edges'))[, 2]
 
   expect_equal(within_conns_from_gof, actual_within_conns)
 

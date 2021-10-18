@@ -170,7 +170,7 @@ gof_lighthergm <- function(net,
   # Validate the simulation type
   allowed_type_values <- c('full', 'within')
   if (!type %in% allowed_type_values){
-    stop('The `type` argument must be any of `full` or `within`')
+    stop("The `type` argument must be any of 'full' or 'within'")
   }
 
   if (type == 'full'){
