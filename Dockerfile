@@ -9,10 +9,8 @@ RUN apt-get update && apt-get install -y python3-dev python3-pip
 # Install infomap by pip3.
 RUN pip3 install -U infomap
 
-# Install the latest version of ergm.
-# When you include the version tag, it seems you cannot install the latest version (at least >= 3.11.0) of ergm by default, which cause a dependency issue with lighthergm.
-# To avoid that problem, ergm is downloaded from http://cran.rstudio.com/.
-RUN Rscript -e "install.packages(c('RcppArmadillo', 'ergm'), repos = 'http://cran.rstudio.com/')"
+# Make it possible to install latest packages
+RUN echo "options(repos = c(REPO_NAME = 'https://packagemanager.rstudio.com/all/__linux__/centos7/latest'), download.file.method = 'libcurl')" >> /usr/local/lib/R/etc/Rprofile.site
 
 # Install lighthergm.
 COPY ./lighthergm /lighthergm
