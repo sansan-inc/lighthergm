@@ -15,7 +15,7 @@
 #' @param use_fast_between_simulation If `TRUE`, this function uses an effcient way to simulate a between-block network. If the network is very large, you should consider using this option.
 #' Note that when you use this, the first element of `coef_between_block` must be the edges parameter.
 #' @param list_feature_matrices a list of feature adjacency matrices. If `use_fast_between_simulation`, this must be given.
-#' @param verbose If this is TRUE/1, the program will print out additionalinformation about the progress of simulation.
+#' @param verbose If this is TRUE/1, the program will print out additional information about the progress of simulation.
 #' @param ... Additional arguments, to be passed to lower-level functions
 #'
 #' @examples
@@ -761,4 +761,96 @@ get_between_stats <- function(edgelists, between_formula) {
     })
   rownames(between_stats) <- NULL
   data.frame(between_stats)
+}
+
+
+#' Obtains network statistics based on MCMC simulations including only the
+#' within-blocks connections.
+#' @param formula_for_simulations formula for simulating a network
+#' @param data_for_simulation a data frame that contains vertex id, block membership, and vertex features.
+#' @param colname_vertex_id a column name in the data frame for the vertex ids
+#' @param colname_block_membership a column name in the data frame for the block membership
+#' @param seed_edgelist an edgelist used for creating a seed network. It should have the "edgelist" class
+#' @param coef_within_block a vector of within-block parameters. The order of the parameters should match that of the formula.
+#' @param output The desired output of the simulation (any of `stats`, `network` or `edgelist`). Defaults to `stats`
+#' @param ergm_control auxiliary function as user interface for fine-tuning ERGM simulation
+#' @param seed seed value (integer) for network simulation.
+#' @param n_sim number of networks generated
+#' @param verbose If this is TRUE/1, the program will print out additional information about the progress of simulation.
+#' @param ... arguments to be passed to low level functions
+#' @importFrom magrittr %>% %<>%
+#' @export
+simulate_hergm_within <- function(formula_for_simulation,
+                                  data_for_simulation,
+                                  colname_vertex_id,
+                                  colname_block_membership,
+                                  coef_within_block,
+                                  seed_edgelist = NULL,
+                                  output = 'stats',
+                                  ergm_control = ergm::control.simulate.formula(),
+                                  seed = NULL,
+                                  n_sim = 1,
+                                  verbose = 0,
+                                  ...) {
+
+  if (verbose > 0) {
+    message("Sorting the given dataset by the block ids.")
+  }
+  # Create a data frame from block memberships, vertex ids, and vertex covariates, sorted by block ids.
+  sorted_dataframe <- sort_block_membership(data_for_simulation, colname_vertex_id, colname_block_membership)
+  rm(data_for_simulation)
+
+  # Create seed networks from which networks will be simulated.
+  if (verbose > 0) {
+    message("Creating a seed within-block network.")
+  }
+
+  # Seed edgelist
+  if (!is.null(seed_edgelist)) {
+    # Validate the `seed_edgelist` object.
+    if (!any(class(seed_edgelist) == "edgelist")) {
+      stop("\nThe given edgelist must have the 'edgelist' class, i.e., it must have an edgelist, the number of vertices, and vertex names.")
+    }
+    # Arrange the given edgelist
+    seed_edgelist_within <- arrange_edgelist(seed_edgelist, sorted_dataframe)$edgelist_within
+  } else {
+    seed_edgelist_within <- NULL
+  }
+
+  seed_network_within <-
+    generate_seed_network(formula_for_simulation, sorted_dataframe, directed = FALSE)
+
+  # Create formula for simulating within-block networks.
+  ## Extract the RHS of the given formula
+  formula_rhs <- as.character(formula_for_simulation)[3]
+  ## Create a formula for simulation
+  ### For within-block network
+  formula_for_simulation_within <- as.formula(glue::glue("seed_network_within ~ {formula_rhs}"))
+
+  # Send a message about which value of a coefficient is attached to which term.
+  # This is to make sure that `coef_within_block` are correctly specified as the user intends.
+  names(coef_within_block) <- statnet.common::list_rhs.formula(formula_for_simulation_within) %>%
+    as.character %>%
+    stringr::str_replace_all("\"", "'")
+
+  # Simulate connections
+  if (verbose > 0) {
+    message("Simulating within-block networks.")
+  }
+  simulation_within <- draw_within_block_connection(
+    seed_network = seed_network_within,
+    formula_for_simulation = formula_for_simulation_within,
+    coef_within_block = coef_within_block,
+    ergm_control = ergm_control,
+    output = output,
+    seed = seed,
+    n_sim = n_sim,
+    verbose = verbose
+  )
+
+  if(output == 'stats'){
+    simulation_within %<>% as.data.frame
+  }
+
+  return(simulation_within)
 }
