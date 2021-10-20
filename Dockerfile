@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y python3-dev python3-pip
 RUN pip3 install -U infomap
 
 # Make it possible to install latest packages
+# https://www.rocker-project.org/use/extending/
 RUN echo "options(repos = c(REPO_NAME = 'https://packagemanager.rstudio.com/all/__linux__/centos7/latest'), download.file.method = 'libcurl')" >> /usr/local/lib/R/etc/Rprofile.site
 
 # Install lighthergm.
