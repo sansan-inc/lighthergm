@@ -415,6 +415,18 @@ arrange_edgelist <- function(edgelist, sorted_dataframe) {
   ))
 }
 
+#' Extract Covariate Names
+#' Extracts the names of covariates used in the formula
+#' @param formula_for_simulation the formula to check
+#' @return A list of covariate names (can be empty)
+#' @importFrom magrittr %>%
+extract_covariate_names <- function(formula_for_simulation){
+  covars_pattern = '"[^"]*"'
+  as.character(formula_for_simulation)[3] %>%
+    stringr::str_extract_all(pattern = covars_pattern) %>%
+    unlist %>%
+    stringr::str_remove_all(pattern = '\"')
+}
 
 #' Create a seed network from which a network will be simulated.
 #' @param formula_for_simulation formula for simulating a network
@@ -437,19 +449,19 @@ generate_seed_network <- function(formula_for_simulation, sorted_dataframe, edge
   }
 
   # Get variable names from formula (extract strings sandwiched by double quotes)
-  list_varname <- as.character(formula_for_simulation)[3]
-  list_varname <- unlist(stringr::str_extract_all(string = list_varname, pattern = '"[^"]*"'))
-  list_varname <- stringr::str_remove_all(string = list_varname, pattern = '\"')
+  list_varname <- extract_covariate_names(formula_for_simulation)
 
   # Attach vertex features
-  foreach(i = 1:length(list_varname)) %do% {
-    feature <-
-      dplyr::pull(sorted_dataframe, list_varname[i])
-    # Network objects can't accept factors.
-    if (class(feature) == "factor") {
-      feature <- as.character(feature)
+  if(length(list_varname) > 0){
+    foreach(i = 1:length(list_varname)) %do% {
+      feature <-
+        dplyr::pull(sorted_dataframe, list_varname[i])
+      # Network objects can't accept factors.
+      if (class(feature) == "factor") {
+        feature <- as.character(feature)
+      }
+      network::set.vertex.attribute(g, attrname = list_varname[i], value = feature)
     }
-    network::set.vertex.attribute(g, attrname = list_varname[i], value = feature)
   }
 
   # Attach block info
@@ -706,22 +718,22 @@ generate_network_for_output <- function(formula_for_simulation_within, formula_f
 
   # Get variable names from formula (extract strings sandwiched by double quotes)
   ## From the within-block network formula
-  list_varname_within <- as.character(formula_for_simulation_within)[3]
-  list_varname_within <- unlist(stringr::str_extract_all(string = list_varname_within, pattern = '"[^"]*"'))
-  list_varname_within <- stringr::str_remove_all(string = list_varname_within, pattern = '\"')
+  list_varname_within <- extract_covariate_names(formula_for_simulation_within)
   ## From the between-block network formula
-  list_varname_between <- as.character(formula_for_simulation_between)[3]
-  list_varname_between <- unlist(stringr::str_extract_all(string = list_varname_between, pattern = '"[^"]*"'))
-  list_varname_between <- stringr::str_remove_all(string = list_varname_between, pattern = '\"')
+  list_varname_between <- extract_covariate_names(formula_for_simulation_between)
   # Combine them.
   list_varname <- unique(c(list_varname_within, list_varname_between))
 
   # Attach vertex features
-  foreach(i = 1:length(list_varname)) %do% {
-    feature <-
-      dplyr::pull(sorted_dataframe, list_varname[i])
-    network::set.vertex.attribute(g, attrname = list_varname[i], value = feature)
+  n_covars <- length(list_varname)
+  if(n_covars > 0){
+    foreach(i = 1:n_covars) %do% {
+      feature <-
+        dplyr::pull(sorted_dataframe, list_varname[i])
+      network::set.vertex.attribute(g, attrname = list_varname[i], value = feature)
+    }
   }
+
   # Attach block info
   network::set.vertex.attribute(g, attrname = "block", value = sorted_dataframe$block)
   # Return the network
