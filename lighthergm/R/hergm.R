@@ -3,6 +3,7 @@
 #' The function hergm estimates and simulates three classes of hierarchical exponential-family random graph models.
 #' @useDynLib lighthergm
 #' @importFrom Rcpp sourceCpp
+#' @importFrom ergm ergm.getnetwork
 #' @param object A formula or `lighthergm` class object. A `lighthergm` is returned by `hergm()`.
 #' When you pass a `lighthergm` class object to `hergm()`, you can restart the EM step.
 #' @param n_clusters The number of blocks. This must be specified by the user.
@@ -128,7 +129,7 @@ hergm <- function(object,
     }
 
     # Get network object from formula
-    network <- hergm.getnetwork(formula, n_clusters)
+    network <- ergm::ergm.getnetwork(formula)
 
     # The current hergm doesn't support directed networks.
     if (network$gal$directed) {

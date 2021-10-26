@@ -384,59 +384,6 @@ EM_wrapper <-
 # -------------- Auxiliary functions -------------------------------------
 # ------------------------------------------------------------------------
 
-#' a function that gets a network object from a formula
-#' @param form a formula that contains a network object in the left-hand side
-#' @param n_clusters the maximum number of blocks
-#' @param loopswarning if TRUE, this function warns that the network contains loops.
-hergm.getnetwork <- function(form, n_clusters, loopswarning = TRUE) {
-  if ((dc <- data.class(form)) != "formula") {
-    stop(paste("Invalid formula of class ", dc))
-  }
-  trms <- terms(form)
-  if (trms[[1]] != "~") {
-    stop("Formula must be of the form 'network ~ model'.")
-  }
-
-  nw.env <- environment(form)
-  if (!exists(x = paste(trms[[2]]), envir = nw.env)) {
-    stop(paste("The network in the formula '", capture.output(print(form)), "' cannot be found.", sep = ""))
-  }
-  nw <- try(
-    {
-      tmp <- eval(trms[[2]], envir = nw.env)
-      if (network::is.network(tmp)) {
-        return(tmp)
-      } else {
-        return(network::as.network(tmp))
-      }
-    },
-    silent = TRUE
-  )
-  if (inherits(nw, "try-error")) {
-    stop("Invalid network. Is the left-hand-side of the formula correct?")
-  }
-  if (loopswarning) {
-    e <- as.edgelist(nw)
-    if (any(e[, 1] == e[, 2])) {
-      warning("This network contains loops")
-    } else if (has.loops(nw)) {
-      warning("This network is allowed to contain loops")
-    }
-  }
-  nw$terms <- 1
-  if (is.null(n_clusters)) {
-    nw$n_clusters <- nw$gal$n
-  } else {
-    nw$n_clusters <- n_clusters
-  }
-  # print("nw$n_clusters")
-  # print(nw$n_clusters)
-  model <- ergm::ergm_model(form, nw, drop = FALSE, expanded = TRUE)
-  Clist <- ergm::ergm.Cprepare(nw, model)
-  nw$terms <- Clist$nterms
-  return(nw)
-}
-
 permute_tau <- function(tau, labels) {
   new_tau <- tau
   for (i in 1:length(labels)) {

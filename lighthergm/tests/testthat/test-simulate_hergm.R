@@ -440,3 +440,30 @@ test_that("Simulating networks using formula without externality terms works", {
     NA
   )
 })
+
+test_that("Simulating networks using formula without covariates works", {
+  K <- 10
+  N <- 200
+  formula_1 <- g ~ edges
+  x <- sample(c(1, 2), size = N, replace = TRUE)
+  block <- sample(1:K, size = N, replace = TRUE)
+
+  nodes_data <-
+    tibble::tibble(x = x, node_id = as.character(1:N), block = block)
+
+  coef_between <- c(-6.5)
+  coef_within <- c(-4.5)
+
+  expect_error(
+    sim_net_1 <- lighthergm::simulate_hergm(
+      formula_for_simulation = formula_1,
+      data_for_simulation = nodes_data,
+      colname_vertex_id = 'node_id',
+      colname_block_membership = 'block',
+      coef_between_block = coef_between,
+      coef_within_block = coef_within,
+      n_sim = 1
+    ),
+    NA
+  )
+})
