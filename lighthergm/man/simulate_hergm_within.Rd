@@ -21,6 +21,8 @@ simulate_hergm_within(
 )
 }
 \arguments{
+\item{formula_for_simulation}{formula for simulating a network}
+
 \item{data_for_simulation}{a data frame that contains vertex id, block membership, and vertex features.}
 
 \item{colname_vertex_id}{a column name in the data frame for the vertex ids}
@@ -42,8 +44,6 @@ simulate_hergm_within(
 \item{verbose}{If this is TRUE/1, the program will print out additional information about the progress of simulation.}
 
 \item{...}{arguments to be passed to low level functions}
-
-\item{formula_for_simulations}{formula for simulating a network}
 }
 \description{
 Obtains network statistics based on MCMC simulations including only the

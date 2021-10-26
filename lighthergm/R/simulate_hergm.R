@@ -778,7 +778,7 @@ get_between_stats <- function(edgelists, between_formula) {
 
 #' Obtains network statistics based on MCMC simulations including only the
 #' within-blocks connections.
-#' @param formula_for_simulations formula for simulating a network
+#' @param formula_for_simulation formula for simulating a network
 #' @param data_for_simulation a data frame that contains vertex id, block membership, and vertex features.
 #' @param colname_vertex_id a column name in the data frame for the vertex ids
 #' @param colname_block_membership a column name in the data frame for the block membership
