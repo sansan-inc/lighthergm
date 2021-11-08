@@ -62,10 +62,17 @@ jobs:
           do
             eval sudo $cmd
           done < <(Rscript -e 'writeLines(remotes::system_requirements("ubuntu", "20.04", "lighthergm"))')
+
       - name: Install dependencies
         run: |
           remotes::install_deps("lighthergm", dependencies = TRUE)
           remotes::install_cran("rcmdcheck")
+        shell: Rscript {0}
+
+      - name: Install the binary version of igraph (for Windows)
+        if: runner.os == 'Windows'
+        run: |
+          install.packages("igraph", type = "binary")
         shell: Rscript {0}
 
       - name: Check
