@@ -1,6 +1,11 @@
-#include <omp.h>
+#ifdef _OPENMP
+    #include <omp.h>
+#else
+    #define omp_get_max_threads() 0
+#endif
 #include <RcppArmadillo.h>
 // [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::plugins(openmp)]]
 
 // Function that simulates a between-block network.
 // The first element of `coef_between` must be the edges parameter.
