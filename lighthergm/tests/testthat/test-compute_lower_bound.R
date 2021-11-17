@@ -1,5 +1,5 @@
 test_that("computing the lower bound works", {
-
+  set.seed(12345)
   ####################
   # Setup
   ####################
