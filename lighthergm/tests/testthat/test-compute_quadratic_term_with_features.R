@@ -1,4 +1,5 @@
 test_that("computing a quadratic term with multiple features works", {
+  set.seed(334)
   # Number of nodes
   N <- 12
   # Number of clusters
