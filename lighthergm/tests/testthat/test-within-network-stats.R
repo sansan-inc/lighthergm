@@ -118,7 +118,7 @@ test_that("simulating a network from a given edgelist works", {
   expect_true(all(g_sim == g2))
 })
 
-test_that("simulating a network from a given edgelist works", {
+test_that("The within-simulation begins from an empty network by default", {
   set.seed(1)
   # Prepare ingredients for simulating a network
   N <- 1000
@@ -166,5 +166,4 @@ test_that("simulating a network from a given edgelist works", {
 
   # Check if the network is correctly generated
   expect_equal(nrow(g_sim), 0)
-  expect_true(all(g_sim == g2))
 })

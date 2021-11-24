@@ -188,7 +188,7 @@ test_that("The simulation begins from an empty network by default", {
       directed = FALSE
     )
 
-  expect_match(class(g2), "network")
+  expect_match(class(g_sim), "network")
 
   g_sim <- network::as.edgelist(g_sim)
 
