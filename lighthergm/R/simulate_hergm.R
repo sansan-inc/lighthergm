@@ -830,7 +830,7 @@ simulate_hergm_within <- function(formula_for_simulation,
   }
 
   seed_network_within <-
-    generate_seed_network(formula_for_simulation, sorted_dataframe, directed = FALSE)
+    generate_seed_network(formula_for_simulation, sorted_dataframe, edgelist = seed_edgelist_within, directed = FALSE)
 
   # Create formula for simulating within-block networks.
   ## Extract the RHS of the given formula
