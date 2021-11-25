@@ -143,6 +143,7 @@ get_gof_stats <- function(sim_formula, net = NULL, sim_number = NULL, compute_ge
 #' @param n_sim the number of simulations to employ for calculating goodness of fit
 #' @param prevent_duplicate see `simulate_hergm`
 #' @param compute_geodesic_distance if `TRUE`, the distribution of geodesic distances is also computed (considerably increases computation time on large networks. `FALSE` by default.)
+#' @param start_from_observed if `TRUE`, MCMC uses the observed network as a starting point
 #' @param ... Additional arguments, to be passed to lower-level functions
 #'
 #' @export
@@ -286,7 +287,7 @@ gof_lighthergm <- function(net,
           seed_edgelist = network::as.edgelist(base_network),
           coef_within_block = coef_within_block,
           output = 'network',
-          ergm_control = ergm_control,
+          ergm_control = ergm_control_sim,
           seed = seed,
           n_sim = 1
         )

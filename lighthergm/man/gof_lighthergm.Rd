@@ -46,6 +46,8 @@ gof_lighthergm(
 
 \item{compute_geodesic_distance}{if \code{TRUE}, the distribution of geodesic distances is also computed (considerably increases computation time on large networks. \code{FALSE} by default.)}
 
+\item{start_from_observed}{if \code{TRUE}, MCMC uses the observed network as a starting point}
+
 \item{...}{Additional arguments, to be passed to lower-level functions}
 }
 \description{
