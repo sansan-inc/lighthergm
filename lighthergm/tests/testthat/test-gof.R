@@ -278,7 +278,7 @@ test_that("Within-connections GOF can be started from the observed network", {
 
   first_simulation_stats <-test_gof_res$simulated$network_stats %>%
     dplyr::filter(n_sim == 1) %>%
-    select(-n_sim)
+    dplyr::select(-n_sim)
 
   original_network_stats <- test_gof_res$original$network_stats
   expect_equal(original_network_stats, first_simulation_stats)
