@@ -158,8 +158,8 @@ gof_lighthergm <- function(net,
                            n_sim = 1,
                            prevent_duplicate = TRUE,
                            compute_geodesic_distance = FALSE,
+                           start_from_observed = FALSE,
                            ...) {
-
   # Setup
   gof_formula <- swap_formula_network(net, lighthergm_results$est_within$formula, environment())
   burnin <- ergm_control$MCMC.burnin
@@ -173,14 +173,25 @@ gof_lighthergm <- function(net,
     stop("The `type` argument must be any of 'full' or 'within'")
   }
 
+  seed_edgelist = NULL
+
   if (type == 'full'){
     original_stats <- get_gof_stats(gof_formula, compute_geodesic_distance = compute_geodesic_distance)
+
+    if(start_from_observed){
+      seed_edgelist <- network::as.edgelist(net)
+    }
+
   } else {
     sorted_dataframe <- sort_block_membership(data_for_simulation, colname_vertex_id, colname_block_membership)
     seed_edgelist_within <- arrange_edgelist(network::as.edgelist(net), sorted_dataframe)$edgelist_within
     within_network <- generate_seed_network(gof_formula, sorted_dataframe, edgelist = seed_edgelist_within, directed = FALSE)
 
     original_stats <- get_gof_stats(gof_formula, net = within_network, compute_geodesic_distance = compute_geodesic_distance)
+
+    if(start_from_observed){
+      seed_edgelist <- network::as.edgelist(within_network)
+    }
   }
 
   # Simulate the first network by initializing it from zero. The burnin here is the one set by the user.
@@ -190,6 +201,7 @@ gof_lighthergm <- function(net,
       data_for_simulation = data_for_simulation,
       colname_vertex_id = colname_vertex_id,
       colname_block_membership = colname_block_membership,
+      seed_edgelist = seed_edgelist,
       coef_within_block = coef_within_block,
       coef_between_block = coef_between_block,
       ergm_control = ergm_control,
@@ -208,6 +220,7 @@ gof_lighthergm <- function(net,
       data_for_simulation = data_for_simulation,
       colname_vertex_id = colname_vertex_id,
       colname_block_membership = colname_block_membership,
+      seed_edgelist = seed_edgelist,
       coef_within_block = coef_within_block,
       output = 'network',
       ergm_control = ergm_control,

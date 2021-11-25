@@ -17,6 +17,7 @@ gof_lighthergm(
   n_sim = 1,
   prevent_duplicate = TRUE,
   compute_geodesic_distance = FALSE,
+  start_from_observed = FALSE,
   ...
 )
 }
