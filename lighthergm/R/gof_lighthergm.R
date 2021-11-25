@@ -163,7 +163,6 @@ gof_lighthergm <- function(net,
                            ...) {
   # Setup
   gof_formula <- swap_formula_network(net, lighthergm_results$est_within$formula, environment())
-  burnin <- ergm_control$MCMC.burnin
   interval <- ergm_control$MCMC.interval
   coef_within_block <- coef(lighthergm_results$est_within)
   coef_between_block <- coef(lighthergm_results$est_between)
