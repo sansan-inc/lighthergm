@@ -163,7 +163,6 @@ gof_lighthergm <- function(net,
                            ...) {
   # Setup
   gof_formula <- swap_formula_network(net, lighthergm_results$est_within$formula, environment())
-  interval <- ergm_control$MCMC.interval
   coef_within_block <- coef(lighthergm_results$est_within)
   coef_between_block <- coef(lighthergm_results$est_between)
 
@@ -250,8 +249,7 @@ gof_lighthergm <- function(net,
 
   if (effective_nsim > 0) {
     # Now replace the burnin with the interval and simulate networks one by one.
-    ergm_control_sim <- ergm_control
-    ergm_control_sim$MCMC.burnin <- interval
+    ergm_control$MCMC.burnin <- ergm_control$MCMC.interval
 
     for (i in 1:effective_nsim) {
       if ((i + 1) %% 50 == 0) {
@@ -262,18 +260,18 @@ gof_lighthergm <- function(net,
         base_network <- simulate_hergm(
           formula_for_simulation = gof_formula,
           list_feature_matrices = list_feature_matrices,
-          data_for_simulation,
-          colname_vertex_id,
-          colname_block_membership,
+          data_for_simulation = data_for_simulation,
+          colname_vertex_id = colname_vertex_id,
+          colname_block_membership = colname_block_membership,
           seed_edgelist = network::as.edgelist(base_network),
-          coef_within_block,
-          coef_between_block,
-          ergm_control_sim,
-          seed,
+          coef_within_block = coef_within_block,
+          coef_between_block = coef_between_block,
+          ergm_control = ergm_control,
+          seed = seed,
           directed = FALSE,
           n_sim = 1,
           output = "network",
-          prevent_duplicate,
+          prevent_duplicate = prevent_duplicate,
           use_fast_between_simulation = TRUE,
           ...
         )
@@ -286,7 +284,7 @@ gof_lighthergm <- function(net,
           seed_edgelist = network::as.edgelist(base_network),
           coef_within_block = coef_within_block,
           output = 'network',
-          ergm_control = ergm_control_sim,
+          ergm_control = ergm_control,
           seed = seed,
           n_sim = 1
         )
