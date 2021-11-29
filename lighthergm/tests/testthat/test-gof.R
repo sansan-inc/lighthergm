@@ -253,3 +253,62 @@ test_that("Return GOF statistics including only within-block connections", {
     expect_true(is.null(stats[["geodesic_dist"]]))
   }
 })
+
+test_that("Within-connections GOF can be started from the observed network", {
+  sim <- get_dummy_net(100, 4)
+  g <- sim$g
+
+  ergm_control <- ergm::control.simulate.formula(
+    MCMC.burnin = 0,
+    MCMC.interval = 1
+  )
+
+  test_gof_res <- lighthergm::gof_lighthergm(
+    g,
+    list_feature_matrices = sim$list_feature_matrices,
+    data_for_simulation = sim$nodes_data,
+    colname_vertex_id = sim$vertex_id_var,
+    colname_block_membership = sim$block_id_var,
+    lighthergm_results = sim$hergm_res,
+    type = 'within',
+    ergm_control = ergm_control,
+    n_sim = 2,
+    start_from_observed = TRUE
+  )
+
+  first_simulation_stats <-test_gof_res$simulated$network_stats %>%
+    dplyr::filter(n_sim == 1) %>%
+    dplyr::select(-n_sim)
+
+  original_network_stats <- test_gof_res$original$network_stats
+  expect_equal(original_network_stats, first_simulation_stats)
+})
+
+test_that("Full GOF can be started from the observed network", {
+  sim <- get_dummy_net(100, 4)
+  g <- sim$g
+
+  ergm_control <- ergm::control.simulate.formula(
+    MCMC.burnin = 0,
+    MCMC.interval = 1
+  )
+
+  test_gof_res <- lighthergm::gof_lighthergm(
+    g,
+    list_feature_matrices = sim$list_feature_matrices,
+    data_for_simulation = sim$nodes_data,
+    colname_vertex_id = sim$vertex_id_var,
+    colname_block_membership = sim$block_id_var,
+    lighthergm_results = sim$hergm_res,
+    type = 'full',
+    ergm_control = ergm_control,
+    n_sim = 2,
+    start_from_observed = TRUE
+  )
+
+  first_simulation_stats <-test_gof_res$simulated$network_stats %>%
+    dplyr::filter(n_sim == 1)
+
+  # If it starts from the observed network, the stats should not be zero
+  expect_true(all(first_simulation_stats['value'] > 0))
+})
