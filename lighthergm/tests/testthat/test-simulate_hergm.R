@@ -87,6 +87,80 @@ test_that("simulating a network from a given edgelist works", {
   x <- sample(1:20, size = N, replace = TRUE)
   y <- sample(LETTERS, size = N, replace = TRUE)
 
+  df <- tibble::tibble(
+    id = vertex_id,
+    memb = memb,
+    x = x,
+    y = y
+  )
+
+  # Simulate a network
+  g_sim <-
+    simulate_hergm(
+      formula_for_simulation = formula,
+      data_for_simulation = df,
+      colname_vertex_id = "id",
+      colname_block_membership = "memb",
+      coef_within_block = list_within_params,
+      coef_between_block = list_between_params,
+      ergm_control = ergm::control.simulate.formula(
+        MCMC.burnin = 10000,
+        MCMC.interval = 100
+      ),
+      seed_for_within = 1,
+      seed_for_between = 1,
+      n_sim = 1,
+      directed = FALSE
+    )
+
+  g_sim <- network::as.edgelist(g_sim)
+
+  # Simulate a network from a given edgelist
+  g2 <-
+    simulate_hergm(
+      formula_for_simulation = formula,
+      data_for_simulation = df,
+      colname_vertex_id = "id",
+      colname_block_membership = "memb",
+      coef_within_block = list_within_params,
+      coef_between_block = list_between_params,
+      # These settings should result on the exact same network being returned
+      # after one simulation. Check that.
+      ergm_control = ergm::control.simulate.formula(
+        MCMC.burnin = 0,
+        MCMC.interval = 1
+      ),
+      seed_for_within = 1,
+      seed_for_between = 1,
+      seed_edgelist = g_sim,
+      n_sim = 1,
+      directed = FALSE
+    )
+
+  expect_match(class(g2), "network")
+
+  g2 <- network::as.edgelist(g2)
+
+  # Check if the network is correctly generated
+  expect_equal(nrow(g_sim), nrow(g2))
+  expect_true(all(g_sim == g2))
+})
+
+test_that("The simulation begins from an empty network by default", {
+  set.seed(1)
+  # Prepare ingredients for simulating a network
+  N <- 1000
+  K <- 10
+
+  list_within_params <- c(-3, 1, 1, 0.76, 0.08)
+  list_between_params <- c(-5, 2, 2)
+  formula <- g ~ edges + nodematch("x") + nodematch("y") + triangle + kstar(2)
+
+  memb <- sample(1:K, size = N, replace = TRUE)
+  vertex_id <- as.character(11:(11 + N - 1))
+
+  x <- sample(1:20, size = N, replace = TRUE)
+  y <- sample(LETTERS, size = N, replace = TRUE)
 
   df <- tibble::tibble(
     id = vertex_id,
@@ -104,35 +178,22 @@ test_that("simulating a network from a given edgelist works", {
       colname_block_membership = "memb",
       coef_within_block = list_within_params,
       coef_between_block = list_between_params,
-      ergm_control = ergm::control.simulate.formula(),
+      ergm_control = ergm::control.simulate.formula(
+        MCMC.burnin = 0,
+        MCMC.interval = 1
+      ),
       seed_for_within = 1,
       seed_for_between = 1,
       n_sim = 1,
       directed = FALSE
     )
 
-  # Convert to an edgelist
+  expect_match(class(g_sim), "network")
+
   g_sim <- network::as.edgelist(g_sim)
 
-  # Simulate a network from a given edgelist
-  g2 <-
-    simulate_hergm(
-      formula_for_simulation = formula,
-      data_for_simulation = df,
-      colname_vertex_id = "id",
-      colname_block_membership = "memb",
-      coef_within_block = list_within_params,
-      coef_between_block = list_between_params,
-      ergm_control = ergm::control.simulate.formula(),
-      seed_for_within = 1,
-      seed_for_between = 1,
-      seed_edgelist = g_sim,
-      n_sim = 1,
-      directed = FALSE
-    )
-
   # Check if the network is correctly generated
-  expect_match(class(g2), "network")
+  expect_equal(nrow(g_sim), 0)
 })
 
 test_that("generating multiple networks works", {
@@ -426,6 +487,33 @@ test_that("Simulating networks using formula without externality terms works", {
 
   coef_between <- c(-6.5, 0)
   coef_within <- c(-4.5, 5)
+
+  expect_error(
+    sim_net_1 <- lighthergm::simulate_hergm(
+      formula_for_simulation = formula_1,
+      data_for_simulation = nodes_data,
+      colname_vertex_id = 'node_id',
+      colname_block_membership = 'block',
+      coef_between_block = coef_between,
+      coef_within_block = coef_within,
+      n_sim = 1
+    ),
+    NA
+  )
+})
+
+test_that("Simulating networks using formula without covariates works", {
+  K <- 10
+  N <- 200
+  formula_1 <- g ~ edges
+  x <- sample(c(1, 2), size = N, replace = TRUE)
+  block <- sample(1:K, size = N, replace = TRUE)
+
+  nodes_data <-
+    tibble::tibble(x = x, node_id = as.character(1:N), block = block)
+
+  coef_between <- c(-6.5)
+  coef_within <- c(-4.5)
 
   expect_error(
     sim_net_1 <- lighthergm::simulate_hergm(

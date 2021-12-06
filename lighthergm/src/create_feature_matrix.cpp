@@ -2,10 +2,15 @@
 // BinaryReciprocityModel.cpp for version written already,
 // MMBinaryReciprocityModel.cpp for more eleborate version
 // #define ARMA_64BIT_WORD 1;
-#include <omp.h>
+#ifdef _OPENMP
+    #include <omp.h>
+#else
+    #define omp_get_max_threads() 0
+#endif
 #include <RcppArmadillo.h>
 #include "helper.h"
 // [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::plugins(openmp)]]
 
 
 // [[Rcpp::export]]

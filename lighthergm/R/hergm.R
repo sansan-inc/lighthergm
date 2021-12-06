@@ -3,6 +3,7 @@
 #' The function hergm estimates and simulates three classes of hierarchical exponential-family random graph models.
 #' @useDynLib lighthergm
 #' @importFrom Rcpp sourceCpp
+#' @importFrom ergm ergm.getnetwork
 #' @param object A formula or `lighthergm` class object. A `lighthergm` is returned by `hergm()`.
 #' When you pass a `lighthergm` class object to `hergm()`, you can restart the EM step.
 #' @param n_clusters The number of blocks. This must be specified by the user.
@@ -40,6 +41,7 @@
 #' @param check_alpha_update If `TRUE`, this function keeps track of alpha matrices at each EM iteration.
 #' If the network is large, we strongly recommend to set to be `FALSE`.
 #' @param check_block_membership If TRUE, this function keeps track of estimated block memberships at each EM iteration.
+#' @param cache a `cachem` cache object used to store intermediate calculations such as eigenvector decomposition results.
 #' @param ... Additional arguments, to be passed to lower-level functions
 #'
 #' @examples
@@ -80,6 +82,7 @@ hergm <- function(object,
                   compute_pi = FALSE,
                   check_alpha_update = FALSE,
                   check_block_membership = FALSE,
+                  cache = NULL,
                   ...) {
   ###################################################################################
   ###### Preparations for estimation ################################################
@@ -126,7 +129,7 @@ hergm <- function(object,
     }
 
     # Get network object from formula
-    network <- hergm.getnetwork(formula, n_clusters)
+    network <- ergm::ergm.getnetwork(formula)
 
     # The current hergm doesn't support directed networks.
     if (network$gal$directed) {
@@ -232,7 +235,8 @@ hergm <- function(object,
       compute_pi = compute_pi,
       check_alpha_update = check_alpha_update,
       check_block_membership = check_block_membership,
-      EM_restart_object = EM_restart_object
+      EM_restart_object = EM_restart_object,
+      cache = cache
     )
 
     block_membership <- answer$z_memb_final

@@ -11,11 +11,13 @@ gof_lighthergm(
   colname_vertex_id,
   colname_block_membership,
   lighthergm_results,
+  type = "full",
   ergm_control = ergm::control.simulate.formula(),
   seed = NULL,
   n_sim = 1,
   prevent_duplicate = TRUE,
   compute_geodesic_distance = FALSE,
+  start_from_observed = FALSE,
   ...
 )
 }
@@ -32,6 +34,8 @@ gof_lighthergm(
 
 \item{lighthergm_results}{a lighthergm results object}
 
+\item{type}{the type of evaluation to perform. Can take the values \code{full} or \code{within}. \code{full} performs the evaluation on all edges, and \code{within} only considers within-block edges.}
+
 \item{ergm_control}{MCMC parameters as an instance of ergm.control}
 
 \item{seed}{the seed to be passed to simulate_hergm}
@@ -41,6 +45,8 @@ gof_lighthergm(
 \item{prevent_duplicate}{see \code{simulate_hergm}}
 
 \item{compute_geodesic_distance}{if \code{TRUE}, the distribution of geodesic distances is also computed (considerably increases computation time on large networks. \code{FALSE} by default.)}
+
+\item{start_from_observed}{if \code{TRUE}, MCMC uses the observed network as a starting point}
 
 \item{...}{Additional arguments, to be passed to lower-level functions}
 }

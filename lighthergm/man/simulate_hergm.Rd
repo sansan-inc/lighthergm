@@ -56,7 +56,7 @@ Note that when you use this, the first element of \code{coef_between_block} must
 
 \item{list_feature_matrices}{a list of feature adjacency matrices. If \code{use_fast_between_simulation}, this must be given.}
 
-\item{verbose}{If this is TRUE/1, the program will print out additionalinformation about the progress of simulation.}
+\item{verbose}{If this is TRUE/1, the program will print out additional information about the progress of simulation.}
 
 \item{...}{Additional arguments, to be passed to lower-level functions}
 }
