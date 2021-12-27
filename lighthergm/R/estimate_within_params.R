@@ -33,6 +33,7 @@ estimate_within_params <-
       )
 
     # Get number of clusters
+    all_clusters <- names(table(factor(block_structure$block)))
     n_cluster <- length(unique(z_memb))
 
     # Get an edgelist and vertex attributes from the network object using intergraph::asDF
@@ -67,7 +68,7 @@ estimate_within_params <-
       cluster <- parallel::makeCluster(number_cores, type = "PSOCK")
       doParallel::registerDoParallel(cluster)
       # Start computation
-      block_net <- foreach(k = 1:n_cluster) %dopar% {
+      block_net <- foreach(k = all_clusters) %dopar% {
         # Get a subgraph whose vertices belong to block k.
         subnet <- get_induced_subgraph(block_structure, edgelist, k)
         # Keep vertex ids
@@ -84,7 +85,7 @@ estimate_within_params <-
     }
     # For non-Windows users
     else {
-      block_net <- mclapply(1:n_cluster, function(k) {
+      block_net <- mclapply(all_clusters, function(k) {
         # Get a subgraph whose vertices belong to block k.
         subnet <- get_induced_subgraph(block_structure, edgelist, k)
         # Keep vertex ids
