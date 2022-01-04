@@ -25,6 +25,8 @@ estimate_within_params <-
            method_second_step = c("MPLE", "MLE"),
            offset_coef = NULL,
            ...) {
+
+    varargs <- list(...)
     # Store block structure in a tibble
     block_structure <-
       tibble::tibble(
@@ -176,11 +178,18 @@ estimate_within_params <-
 
     # Estimate the within-block parameters
     # The default estimation method is "MPLE", but you can select "MLE" if you like.
+    if(is.null(varargs$control)){
+      control <- ergm::control.ergm()
+    } else {
+      control <- varargs$control
+    }
+
     model_est <- ergm(
       formula = formula,
       constraints = ~ blockdiag("block"),
       estimate = method_second_step,
-      offset.coef = offset_coef
+      offset.coef = offset_coef,
+      control = control
     )
 
     # Remove unnecessary network objects
