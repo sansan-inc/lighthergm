@@ -69,3 +69,74 @@ test_that("estimating within-block parameters works", {
   expect_equal(network::get.vertex.attribute(g_est, "x"), x_ans)
   expect_equal(network::network.vertex.names(g_est), vertex_id_ans)
 })
+
+test_that("estimating within-block parameters works with non-consecutive block names", {
+  adj <- c(
+    c(0, 1, 0, 1, 1, 0),
+    c(1, 0, 1, 0, 0, 1),
+    c(0, 1, 0, 1, 1, 0),
+    c(1, 0, 1, 0, 1, 1),
+    c(1, 0, 1, 1, 0, 1),
+    c(0, 1, 0, 1, 1, 0)
+  )
+  adj <- matrix(data = adj, nrow = 6, ncol = 6)
+  rownames(adj) <- as.character(1001:1006)
+  colnames(adj) <- as.character(1001:1006)
+
+  x <- c(1, 0, 0, 1, 1, 0)
+
+  # Use non-consecutive block names
+  block <- c(50, 70, 95, 50, 95, 70)
+
+  g <- network::network(adj, matrix.type = "adjacency")
+  network::set.vertex.attribute(g, attrname = "x", value = x)
+
+  suppressWarnings(est <- estimate_within_params(
+    formula = g ~ edges + nodematch("x"),
+    network = g,
+    z_memb = block,
+    parallel = FALSE,
+    verbose = 0,
+    initial_estimate = NULL,
+    seeds = NULL,
+    method_second_step = "MPLE"
+  ))
+
+
+  # Get the network used for estimation
+  g_est <- est$network
+
+  # Get the adjacency matrix for the network
+  adj_est <- network::as.matrix.network.adjacency(g_est)
+
+  adj_ans <- c(
+    c(0, 1, 0, 0, 0, 0),
+    c(1, 0, 0, 0, 0, 0),
+    c(0, 0, 0, 1, 0, 0),
+    c(0, 0, 1, 0, 0, 0),
+    c(0, 0, 0, 0, 0, 1),
+    c(0, 0, 0, 0, 1, 0)
+  )
+
+  vertex_id_ans <- as.character(c(1001, 1004, 1002, 1006, 1003, 1005))
+  x_ans <- c(1, 1, 0, 0, 0, 1)
+
+  # Check that the network is the same
+  expect_equal(adj_est, adj_ans, check.attributes = FALSE)
+  expect_equal(network::get.vertex.attribute(g_est, "x"), x_ans)
+  expect_equal(network::network.vertex.names(g_est), vertex_id_ans)
+
+  # Check that the blocks are assigned to the right nodes
+  g_nodes_data <- data.frame(
+    id = network::network.vertex.names(g),
+    block = block
+  ) %>% dplyr::arrange(id)
+
+  est_g_nodes_data <- data.frame(
+    id = network::network.vertex.names(g_est),
+    block = as.double(network::get.vertex.attribute(g_est, 'block'))
+  ) %>% dplyr::arrange(id)
+
+  expect_equal(g_nodes_data$id, est_g_nodes_data$id)
+  expect_equal(g_nodes_data$block, est_g_nodes_data$block)
+})
