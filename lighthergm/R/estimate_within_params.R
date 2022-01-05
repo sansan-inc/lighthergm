@@ -34,7 +34,6 @@ estimate_within_params <-
 
     # Get number of clusters
     all_clusters <- names(table(factor(block_structure$block)))
-    n_cluster <- length(unique(z_memb))
 
     # Get an edgelist and vertex attributes from the network object using intergraph::asDF
     list_edgelist <- intergraph::asDF(network)
