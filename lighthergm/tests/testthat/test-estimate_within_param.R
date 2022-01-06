@@ -140,3 +140,65 @@ test_that("estimating within-block parameters works with non-consecutive block n
   expect_equal(g_nodes_data$id, est_g_nodes_data$id)
   expect_equal(g_nodes_data$block, est_g_nodes_data$block)
 })
+
+test_that("control.ergm settings can be passed to the within estimation from hergm function", {
+  # Define some settings for testing purposes
+  test_burnin <- 9797
+  test_interval <- 3434
+  test_method <- 'Stepping'
+
+  hergm_formula <- g ~ edges + triangle + nodematch("x")
+
+  n_nodes <- 100
+  n_clusters <- 2
+
+  nodes_data <- tibble::tibble(
+    node_id = 1:n_nodes,
+    x = sample(1:2, size = n_nodes, replace = T),
+    block = sample(1:n_clusters, size = n_nodes, replace = T)
+  )
+
+  g <- network::network.initialize(n = n_nodes)
+  network::set.vertex.attribute(g, "x", nodes_data$x)
+  list_feature_matrices <- lighthergm::get_list_sparse_feature_adjmat(g, hergm_formula)
+
+  coef_between_block <- c(-3, 1)
+  coef_within_block <- c(-2, 0.1, 0.5)
+
+  sim_ergm_control <- ergm::control.simulate.formula(
+    MCMC.burnin = 4000000,
+    MCMC.interval = 200000
+  )
+
+  g <- lighthergm::simulate_hergm(
+    formula_for_simulation = hergm_formula,
+    data_for_simulation = nodes_data,
+    colname_vertex_id = "node_id",
+    colname_block_membership = "block",
+    coef_between_block = coef_between_block,
+    coef_within_block = coef_within_block,
+    ergm_control = sim_ergm_control,
+    fast_between_simulation = TRUE,
+    list_feature_matrices = list_feature_matrices
+  )
+
+  hergm_res <- lighthergm::hergm(
+    g ~ edges + nodematch("x") + triangle,
+    n_clusters = n_clusters,
+    n_em_step_max = 10,
+    estimate_parameters = T,
+    clustering_with_features = T,
+    method_second_step = 'MLE',
+    control = ergm::control.ergm(
+      MCMC.burnin = test_burnin,
+      MCMC.interval = test_interval,
+      main.method = test_method
+    )
+  )
+
+  used_control <- hergm_res$est_within$control
+
+  expect_equal(used_control$MCMC.burnin, test_burnin)
+  expect_equal(used_control$MCMC.interval, test_interval)
+  expect_equal(used_control$main.method, test_method)
+})
