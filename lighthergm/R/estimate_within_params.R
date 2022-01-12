@@ -14,6 +14,7 @@
 #' If "MLE", then an approximate maximum likelihood estimator is returned.
 #' @param offset_coef a vector of model parameters to be fixed when estimation.(i.e., not estimated).
 #' @param ... Additional arguments, to be passed to lower-level functions
+#' @importFrom rlang %||%
 #' @export
 estimate_within_params <-
   function(formula,
@@ -179,11 +180,9 @@ estimate_within_params <-
 
     # Estimate the within-block parameters
     # The default estimation method is "MPLE", but you can select "MLE" if you like.
-    if(is.null(varargs$control)){
-      control <- ergm::control.ergm()
-    } else {
-      control <- varargs$control
-    }
+
+    # %||% extracts the value on the left with a default value if null
+    control <- varargs$control %||% ergm::control.ergm()
 
     model_est <- ergm(
       formula = formula,
