@@ -14,6 +14,7 @@
 #' If "MLE", then an approximate maximum likelihood estimator is returned.
 #' @param offset_coef a vector of model parameters to be fixed when estimation.(i.e., not estimated).
 #' @param ... Additional arguments, to be passed to lower-level functions
+#' @importFrom rlang %||%
 #' @export
 estimate_within_params <-
   function(formula,
@@ -25,6 +26,8 @@ estimate_within_params <-
            method_second_step = c("MPLE", "MLE"),
            offset_coef = NULL,
            ...) {
+
+    varargs <- list(...)
     # Store block structure in a tibble
     block_structure <-
       tibble::tibble(
@@ -176,11 +179,16 @@ estimate_within_params <-
 
     # Estimate the within-block parameters
     # The default estimation method is "MPLE", but you can select "MLE" if you like.
+
+    # %||% extracts the value on the left with a default value if null
+    control <- varargs$control %||% ergm::control.ergm()
+
     model_est <- ergm(
       formula = formula,
       constraints = ~ blockdiag("block"),
       estimate = method_second_step,
-      offset.coef = offset_coef
+      offset.coef = offset_coef,
+      control = control
     )
 
     # Remove unnecessary network objects

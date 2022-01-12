@@ -315,7 +315,8 @@ hergm <- function(object,
         verbose,
         seeds = NULL,
         method_second_step,
-        offset_coef
+        offset_coef,
+        ...
       )
 
 
