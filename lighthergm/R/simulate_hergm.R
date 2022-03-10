@@ -544,7 +544,7 @@ draw_within_block_connection <- function(seed_network,
   )
   # If output == "edgelist", attach the class c("edgelist", "matrix")
   if (output == "edgelist") {
-    if (class(within_conn) == 'network.list') {
+    if ('network.list' %in% class(within_conn)) {
       within_conn %<>% purrr::map(function(e){
         attr(e, "vnames") <- network::network.vertex.names(seed_network)
         class(e) <- c("matrix_edgelist", "edgelist", class(e))
