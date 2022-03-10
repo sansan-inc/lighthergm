@@ -223,17 +223,21 @@ simulate_hergm <- function(formula_for_simulation,
       output = temp
     )
 
-  if (!is.function(output) && output == "network") {
+  if (output %in% c('network', 'edgelist')) {
     if (n_sim == 1) {
       # Combine within- and between-block edges while removing duplicated links.
       edgelist <- combine_within_between_edges(edgelist_within, edgelist_between, use_fast_between_simulation)
-      # Create a final network
-      output <- generate_network_for_output(formula_for_simulation_within, formula_for_simulation_between, sorted_dataframe, edgelist)
+      if (output == 'edgelist'){
+        simulation_output <- edgelist
+      } else {
+        # Create a final network
+        simulation_output <- generate_network_for_output(formula_for_simulation_within, formula_for_simulation_between, sorted_dataframe, edgelist)
+      }
       # Return the output
       if (verbose > 0) {
         message("One entire network has been generated.")
       }
-      return(output)
+      return(simulation_output)
     }
     if (n_sim > 1) {
       # Combine within- and between-block edges while removing duplicated links.
@@ -242,15 +246,20 @@ simulate_hergm <- function(formula_for_simulation,
       }
       edgelist <- purrr::map2(edgelist_within, edgelist_between, fn_combine)
       # Create a final network
-      fn_final_network <- function(edgelist) {
-        return(generate_network_for_output(formula_for_simulation_within, formula_for_simulation_between, sorted_dataframe, edgelist))
+      if (output == 'edgelist'){
+        simulation_output <- edgelist
+      } else {
+        fn_final_network <- function(edgelist) {
+          return(generate_network_for_output(formula_for_simulation_within, formula_for_simulation_between, sorted_dataframe, edgelist))
+        }
+        simulation_output <- purrr::map(edgelist, fn_final_network)
       }
-      output <- purrr::map(edgelist, fn_final_network)
+
       # Return the output
       if (verbose > 0) {
         message(glue::glue("{n_sim} entire networks have been generated."))
       }
-      return(output)
+      return(simulation_output)
     }
   }
 
@@ -261,14 +270,25 @@ simulate_hergm <- function(formula_for_simulation,
       output_between <- data.frame(edgelist_between)
     }
     output_within <- data.frame(edgelist_within)
-  } else {
-    output_between <- edgelist_between
-    output_within <- edgelist_within
+
+    return(
+      list(
+        within_network = output_within,
+        between_network = output_between
+        )
+      )
   }
 
-  # When output != "edgelist", like "stat" to see whether MCMC is converging.
-  return(list(within_network = output_within, between_network = output_between))
-}
+  # In this case the result depends on the function set as output
+  else {
+    return(
+      list(
+        within_network = edgelist_within,
+        between_network = edgelist_between
+        )
+    )
+    }
+  }
 
 # ----------------------------------------------------------------------------------------------
 # Auxiliary functions for simulating networks --------------------------------------------------
@@ -524,8 +544,16 @@ draw_within_block_connection <- function(seed_network,
   )
   # If output == "edgelist", attach the class c("edgelist", "matrix")
   if (output == "edgelist") {
-    attr(within_conn, "vnames") <- network::network.vertex.names(seed_network)
-    class(within_conn) <- c("matrix_edgelist", "edgelist", class(within_conn))
+    if (class(within_conn) == 'network.list') {
+      within_conn %<>% map(function(e){
+        attr(e, "vnames") <- network::network.vertex.names(seed_network)
+        class(e) <- c("matrix_edgelist", "edgelist", class(e))
+        return(e)
+      })
+    } else {
+      attr(within_conn, "vnames") <- network::network.vertex.names(seed_network)
+      class(within_conn) <- c("matrix_edgelist", "edgelist", class(within_conn))
+    }
   }
   # Return the output
   return(within_conn)
