@@ -636,7 +636,7 @@ test_that("Setting output = 'edgelist' returns a list of full-network edgelists"
 
   # Convert the network to an edgelist for comparison
   sim_nets_edgelists <- sim_nets %>%
-    map(network::as.edgelist)
+    purrr::map(network::as.edgelist)
 
   sim_edgelists <- simulate_output('edgelist')
   # The class of the returned object should be `list`
