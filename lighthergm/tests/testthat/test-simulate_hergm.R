@@ -288,7 +288,7 @@ test_that("generating stats and avoiding generating within-block links while sim
   expect_equal(c("edges", "nodematch.x", "nodematch.y", "triangle", "kstar2"), colnames(g_sim[[1]]))
   expect_equal(c("edges", "nodematch.x", "nodematch.y", "nodematch.block"), colnames(g_sim[[2]]))
 
-  # Check whther no within-block links are generated in the between-block network.
+  # Check whether no within-block links are generated in the between-block network.
   expect_equal(g_sim[[2]][, 4], rep(0, 10))
 })
 
@@ -527,4 +527,133 @@ test_that("Simulating networks using formula without covariates works", {
     ),
     NA
   )
+})
+
+test_that("Setting output = 'edgelist' returns a single edgelist for the full
+          simulated network", {
+  net <- lighthergm::toyNet
+  # Shuffle the vertex names because we want to check whether the IDs are in the correct order
+  network::network.vertex.names(net) <- as.character(sample(401:600, size = 200, replace = FALSE))
+  nodes_data <- intergraph::asDF(net)$vertexes %>%
+    dplyr::select(vertex.names, x, y, block) %>%
+    dplyr::rename(id = vertex.names)
+
+  model_formula <-
+    net ~ edges + nodematch('x') + nodematch('y') + triangle + kstar(2)
+
+  hergm_res <- lighthergm::hergm(
+    object = model_formula,
+    n_clusters = 4,
+    n_em_step_max = 30,
+    clustering_with_features = TRUE,
+    verbose = 1
+  )
+
+  simulate_output <- function(output){
+    lighthergm::simulate_hergm(
+      formula_for_simulation = model_formula,
+      data_for_simulation = nodes_data,
+      colname_vertex_id = 'id',
+      colname_block_membership = 'block',
+      seed = 44,
+      coef_within_block = hergm_res$est_within$coefficients,
+      coef_between_block = hergm_res$est_between$coefficients,
+      control = ergm::control.simulate.formula(
+        MCMC.burnin = 100000,
+        MCMC.interval = 500
+      ),
+      n_sim = 1,
+      output = output
+    )
+  }
+
+  sim_net <- simulate_output('network')
+  # The class of the returned object should be `network`
+  expect_s3_class(sim_net, 'network')
+  # Convert the network to an edgelist for comparison
+  sim_net_edgelist <- network::as.edgelist(sim_net)
+
+  sim_edgelist <- simulate_output('edgelist')
+  # The class of the returned object should be `edgelist`
+  expect_s3_class(sim_edgelist, 'edgelist')
+
+  # The list of edges should be the same
+  expect_true(all(sim_net_edgelist, sim_edgelist))
+
+  # Both should have the same number of nodes
+  expect_true(attr(sim_net_edgelist, 'n') == attr(sim_edgelist, 'n'))
+
+  expect_true(all(attr(sim_net_edgelist, 'vnames') == attr(sim_edgelist, 'vnames')))
+
+})
+
+test_that("Setting output = 'edgelist' returns a list of full-network edgelists", {
+  net <- lighthergm::toyNet
+  # Shuffle the vertex names because we want to check whether the IDs are in the correct order
+  network::network.vertex.names(net) <- as.character(sample(401:600, size = 200, replace = FALSE))
+  nodes_data <- intergraph::asDF(net)$vertexes %>%
+    dplyr::select(vertex.names, x, y, block) %>%
+    dplyr::rename(id = vertex.names)
+
+  model_formula <-
+    net ~ edges + nodematch('x') + nodematch('y') + triangle + kstar(2)
+
+  hergm_res <- lighthergm::hergm(
+    object = model_formula,
+    n_clusters = 4,
+    n_em_step_max = 30,
+    clustering_with_features = TRUE,
+    verbose = 1
+  )
+
+  simulate_output <- function(output){
+    lighthergm::simulate_hergm(
+      formula_for_simulation = model_formula,
+      data_for_simulation = nodes_data,
+      colname_vertex_id = 'id',
+      colname_block_membership = 'block',
+      seed = 44,
+      coef_within_block = hergm_res$est_within$coefficients,
+      coef_between_block = hergm_res$est_between$coefficients,
+      control = ergm::control.simulate.formula(
+        MCMC.burnin = 100000,
+        MCMC.interval = 500
+      ),
+      n_sim = 3,
+      output = output
+    )
+  }
+
+  # browser()
+
+  sim_nets <- simulate_output('network')
+  # The returned object should be a list of networks
+  expect_equal(class(sim_nets), 'list')
+
+  for(i in 1:length(sim_nets)){
+    expect_s3_class(sim_nets[[i]], 'network')
+  }
+
+  # Convert the network to an edgelist for comparison
+  sim_nets_edgelists <- sim_nets %>%
+    purrr::map(network::as.edgelist)
+
+  sim_edgelists <- simulate_output('edgelist')
+  # The class of the returned object should be `list`
+  expect_equal(class(sim_edgelists), 'list')
+
+  for(i in 1:length(sim_edgelists)){
+    expect_s3_class(sim_edgelists[[i]], 'edgelist')
+  }
+
+  expect_equal(length(sim_nets_edgelists), 3)
+  expect_equal(length(sim_edgelists), 3)
+
+  # The list of edges should be the same
+  for (i in 1:3){
+    expect_true(all(sim_nets_edgelists[[i]], sim_edgelists[[i]]))
+    # Both should have the same number of nodes
+    expect_true(attr(sim_nets_edgelists[[i]], 'n') == attr(sim_edgelists[[i]], 'n'))
+    expect_true(all(attr(sim_nets_edgelists[[i]], 'vnames') == attr(sim_edgelists[[i]], 'vnames')))
+  }
 })
